@@ -1,129 +1,89 @@
-/**
- * @author Galimberti_Francesco
- *
- * @version 4.0
- */
-
 
 import java.util.Random;
 
-/**
- * @author Galimberti_Francesco
- *
- * @brief Classe ThCorsa, si occupa di simulare il galoppo di un cavallo
- */
+
 public class ThCorsa extends Thread {
 
-    /**
-     * @author Galimberti_Francesco
-     *
-     * Dichiarazione dell'attributo che memorizza il numero del cavallo
-     */
+  
     private final int nThread;
-    /**
-     * @author Galimberti_Francesco
-     *
-     * Dichiarazione dell'attributo che memorizza se si vuole utilizzare
-     * lo sleep
-     */
-    private final boolean usaSleep;
-    /**
-     * @author Galimberti_Francesco
-     *
-     * Dichiarazione dell'attributo che memorizza se si vuole utilizzare
-     * lo yeld
-     */
-    private final boolean usaYield;
-    /**
-     * @author Galimberti_Francesco
-     *
-     * Dichiarazione dell'attributo puntatore che servisà a salvare informazioni
-     * sul cavallo
-     */
-    private final DatiCondivisi ptrDati;
+    private DatiCondivisi ptrDati;
+    private Semaforo ptrSincro1;
+    private Semaforo ptrSincro2;
 
-    /**
-     * @author Galimberti_Francesco
-     * 
-     * @brief Costruttore con parametri che permette di inizializzare il numero
-     * del cavallo, un oggetto nel quale verranno memorizzate informazione sul 
-     * cavallo e l'utilizzo o meno dello yeld e dello sleep.     
-     * 
-     * @param nThread il parametro serve per passare al metodo un valore intero
-     * per inizializzare l'attributo che memorizza il numero del cavallo
-     * @param usaSleep il parametro serve per passare al metodo un valore booleano per
-     * permettere l'utilizzo o meno dello sleep
-     * @param usaYield il parametro serve per passare al metodo un valore booleano per
-     * permettere l'utilizzo o meno dello yeld
-     * @param ptrDati il parametro serve a passare al metodo un puntatore
-     * DatiCondivisi dove verrà memorizzato il numero di galoppi del cavallo
-     */
-    public ThCorsa(int nThread, boolean usaSleep, boolean usaYield, DatiCondivisi ptrDati) {
-        this.nThread = nThread;
-        this.usaSleep = usaSleep;
-        this.usaYield = usaYield;
-        this.ptrDati = ptrDati;
+       public ThCorsa(int nT, DatiCondivisi dati, Semaforo sincro1, Semaforo sincro2) {
+        this.nThread = nT;
+        this.ptrDati = dati;
+        this.ptrSincro1 = sincro1;
+        this.ptrSincro2 = sincro2;
     }
-
-    /**
-     * @author Galimberti_Francesco
-     *
-     * @brief Metodo rappresentante il main del Thread
-     *
-     * Il metodo serve a simulare il galoppo del cavallo. Il cavallo continua a
-     * galoppare e il numero dei galoppi incrementato, fino a quando la gara 
-     * termina. Il Thread quindi provvederà a salvare il numero dei galoppi.
-     * Ad ogni galoppo effettuato verrà salvata una stringa in un vettore 
-     * richiamando il metodo opportuno.
-     */
     @Override
     public void run() {
-        int n = 0;
-        Random nRand=new Random();        
         try {
-            while (true) {
-                n++;
-                ptrDati.aggiungiLinea("Clop" + nThread);
-                
-                if (usaSleep) {
-                    Thread.sleep(nRand.nextInt(100)+1);
+            for (int i = 0; i < 50; i++) {
+
+                ptrSincro2.Wait();
+                switch (this.nThread) {
+                    case 1:
+                        ptrDati.setnClop1(i);
+                        break;
+
+                    case 2:
+                        ptrDati.setnClop2(i);
+                        break;
+
+                    case 3:
+                        ptrDati.setnClop3(i);
+                        break;
+
+                    case 4:
+                        ptrDati.setnClop4(i);
+                        break;
+
+                    case 5:
+                        ptrDati.setnClop5(i);
+                        break;
                 }
-                if (usaYield) {
-                    Thread.yield();
-                }
+                ptrSincro1.Signal();
 
                 if (Thread.currentThread().isInterrupted()) {
                     break;
                 }
+
+                Thread.sleep((int) (Math.random() * 10));
+
             }
+            if (!Thread.currentThread().isInterrupted()) {
+//fine corsa
+                ptrDati.signalFine();
+                ptrDati.setPrimo(nThread);
+            }
+
         } catch (InterruptedException ex) {
-            // Logger.getLogger(ThCorsa.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(ThCorsa.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Fine corsa Clop" + nThread);
         }
 
         switch (this.nThread) {
             case 1:
-                ptrDati.setnClop1(n);
-                break;
-                
-            case 2:
-                ptrDati.setnClop2(n);
-                break;
-                
-            case 3:
-                ptrDati.setnClop3(n);
-                break;
-                
-            case 4:
-                ptrDati.setnClop4(n);
-                break;
-                
-            case 5:
-                ptrDati.setnClop5(n);
-                break;
-                
-            default:
+                ptrDati.signalS1();
                 break;
 
+            case 2:
+                ptrDati.signalS2();
+                break;
+
+            case 3:
+                ptrDati.signalS3();
+                break;
+
+            case 4:
+                ptrDati.signalS4();
+                break;
+
+            case 5:
+                ptrDati.signalS5();
+                break;
         }
+
     }
 }
